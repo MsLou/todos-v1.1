@@ -1,75 +1,85 @@
 <template>
-	<li v-for="l in list" v-on:mouseover="handleOver" v-on:mouseout="handleOut" data-index="{{$index}}">
-		<span :class="l.toggle == true ? 'toggle bCheck' : 'toggle aCheck'" class="toggle aCheck" v-on:click="check" data-index="{{$index}}"></span>
-		<label :class="l.toggle == true ? 'tived' : null" data-index="{{$index}}">{{l.text}}</label>
-		<button class="destroy" v-on:click="checkDestroy" v-if="l.show" data-index="{{$index}}">X</button>
-	</li>
+  <li class="todos-list" v-for="l in list" @dblclick="listDbclick($index)">
+    <span :class="l.toggle == true ? 'toggle bCheck' : 'toggle aCheck'" class="toggle aCheck" @click="check($index)"></span>
+    <label :class="l.toggle == true ? 'tived' : null">{{l.text}}</label>
+    <input type="text" class="editText" v-show="l.isEdit" v-is-focus="l.isEdit" v-model="l.text" @keyup.enter="editEnter($index)" @blur="editEnter($index)" />
+    <button class="destroy" @click="checkDestroy($index)">X</button>
+  </li>
 </template>
 <script>
-	export default {
-	  props: ['list'],
-	  data () {
-	    return {
-	      arr: []
-	    }
-	  },
-	  methods: {
-	    handleOver (current, event) {
-	      let index = Number(current.target.getAttribute('data-index'))
-	      this.$parent.overShow(index)
-	    },
-	    handleOut (current) {
-	      let index = Number(current.target.getAttribute('data-index'))
-	      this.$parent.outHide(index)
-	    },
-	    check (current) {
-	      let classes = current.target.className
-	      let next = classes.indexOf('aCheck') > -1 ? ' bCheck' : ' aCheck'
-	      let index = Number(current.target.getAttribute('data-index'))
-	      current.target.className = classes.replace(/\saCheck$|\sbCheck$/gi, next)
-	      // this.list[index].toggle = !this.list[index].toggle
-	      this.$parent.setToggle(index)
-	    },
-	    checkDestroy (current) {
-	      let index = Number(current.target.getAttribute('data-index'))
-	      this.$parent.destroy(index)
-	    }
-	  }
-	}
+  export default {
+    props: ['list'],
+    directives: {
+      'is-focus' (boo) {
+        this.el.focus()
+      }
+    },
+    methods: {
+      check (index) {
+        this.$dispatch('setToggle', index)
+      },
+      checkDestroy (index) {
+        this.$dispatch('destroy', index)
+      },
+      listDbclick (index) {
+        this.$dispatch('checkEdit', true, index)
+      },
+      editEnter (index) {
+        this.$dispatch('checkEdit', false, index)
+      }
+    }
+  }
 </script>
 <style>
-	.tived {
-		text-decoration: underline;
-		color: #d9d9d9;
-	}
-	.check-list > li {
-		position: relative;
-		border-bottom: 1px solid #ededed;
-	}
-	.check-list .toggle {
-		width: 51px;
-		height: 65px;
-		display: block;
-		float: left;
-	}
-	.check-list label {
-		float:left;
-		line-height: 65px;
-		white-space: pre-line;
-    word-break: break-all;
-    margin-left: 45px;
-    width: 454px;
+  .tived {
+    text-decoration: line-through;
+    color: #d9d9d9;
+  }
+  .check-list > li {
+    position: relative;
+    height: 66px;
+    border-bottom: 1px solid #ededed;
+  }
+  .check-list .toggle {
+    width: 50px;
+    height: 65px;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .check-list label, .check-list .editText {
+    line-height: 65px;
     text-align: left;
     transition: color 0.4s;
     font-size: 24px;
-	}
-	.check-list .destroy {
-		position: absolute;
-		right: 10px;
-		top:15px;
-		font-size: 24px;
-		outline: none;
-		border:none;
-		background-color: transparent;
-	}
+    padding:0 0 0 55px;
+    display: block;
+  }
+  .check-list .editText {
+    line-height: 61px;
+    text-indent: 52px;
+    margin-left: 1px;
+    top:0;
+    padding: 0;
+    width: 595px;
+    position: absolute;
+    display: block;
+    z-index: 22;
+  }
+  .check-list .destroy {
+    position: absolute;
+    right: 10px;
+    top:15px;
+    font-size: 24px;
+    outline: none;
+    border:none;
+    display: none;
+    background-color: transparent;
+  }
+  .todos-list:hover .destroy {
+    display: block;
+  }
+  .editText {
+
+  }
 </style>

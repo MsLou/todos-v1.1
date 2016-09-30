@@ -2,41 +2,37 @@
 	<div class="todos-foot">
 		<span class="activelength">{{activeList.length}}:Item left</span>
 		<ul>
-			<li><span :class="handleBtn[0] == true ? 'foot-active' : null" v-on:click.sync="handleAll">All</span></li>
-			<li><span :class="handleBtn[1] == true ? 'foot-active' : null" v-on:click.sync="handleActive">Active</span></li>
-			<li><span :class="handleBtn[2] == true ? 'foot-active' : null" v-on:click.sync="hendleCompleted">Completed</span></li>
+			<li><span :class="handleBtn[0] == true ? 'foot-active' : null" @click.sync="handleAll">All</span></li>
+			<li><span :class="handleBtn[1] == true ? 'foot-active' : null" @click.sync="handleActive">Active</span></li>
+			<li><span :class="handleBtn[2] == true ? 'foot-active' : null" @click.sync="hendleCompleted">Completed</span></li>
 		</ul>
-		<button class="clear-completed" v-if="isClear" v-on:click="clearCompleted" data-index="{{$index}}">Clear completed</button>
+		<button class="clear-completed" @click="clearCompleted($index)">Clear completed</button>
 	</div>
 </template>
 <script>
 	export default {
 	  props: ['activeList'],
-	  created () {
-	    // console.log(this.type)
-	  },
 	  data () {
 	    return {
-	      isClear: true,
-	      handleBtn: [true, false, false]
+	      handleBtn: [true, false, false],
+	      activelength: 0
 	    }
 	  },
 	  methods: {
-	    clearCompleted (current) {
-	      let index = Number(current.target.getAttribute('data-index'))
+	    clearCompleted (index) {
 	      this.$parent.clearComplete(index)
 	    },
 	    handleAll () {
 	      this.handleTive(0)
-	      this.$parent.setList(null, 'All')
+	      this.$dispatch('setList', null, 'All')
 	    },
 	    handleActive () {
 	      this.handleTive(1)
-	      this.$parent.setList(this.activeList, 'Active')
+	      this.$dispatch('setList', this.activeList, 'Active')
 	    },
 	    hendleCompleted () {
 	      this.handleTive(2)
-	      this.$parent.setList(this.completedList, 'Completed')
+	      this.$dispatch('setList', this.completedList, 'Completed')
 	    },
 	    handleTive (item) {
 	      let list = []

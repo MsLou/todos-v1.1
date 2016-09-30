@@ -1,200 +1,198 @@
 <template>
-  <div>
+  <div class="todosBody">
     <div class="check">
-      <span class="check-all {{checkAllType}}" v-on:click="checkAll"></span>
+      <span class="check-all {{checkAllType}}" @click="checkAll"></span>
       <div class="check-input">
-        <input type="text" id="check-append" placeholder="What needs to be done?" v-on:keyup.enter="checkEnter" />
+        <input type="text" id="check-append" placeholder="What needs to be done?" @keyup.enter="checkEnter" />
       </div>
     </div>
     <ul class="check-list">
-      <check-list :list="checkList" :active-list="aList" :completed-list="cList" ></check-list>
+      <check-list :list="checkList"></check-list>
     </ul>
+    <handle v-if="isHandle" :type="type" :check-list="checkList" :active-list="activeList"></handle>
   </div>
-  <handle :type="type" :check-list="checkList" :active-list="aList" :completed-list="cList"></handle>
 </template>
 <script>
   import checkList from './../checkList/checkList'
   import handle from './../todosFoot/foot'
-  let part = function (move, index) {
-    let isAB = move.toggle === true ? 'Active' : 'Completed'
-    let activeList = []
-    let completeList = []
-    for (var i = 0; i < index; i++) {
-      if (this.checkList[i].toggle) {
-        completeList.push(this.checkList[i])
+  let currentIndex = function (type, index) {
+    let a = 0
+    // type的索引
+    let b = 0
+    let totalCheck = this.totalCheck
+    for (var h = 0; h < totalCheck.length; h++) {
+      if (totalCheck[h].toggle === type) {
+        if (b === index) break
+        b++
       } else {
-        activeList.push(this.checkList[i])
+        a++
       }
     }
-    return {
-      completeList: completeList,
-      activeList: activeList,
-      isAB: isAB
-    }
+    return a + b
   }
-  let convent = function (list, val) {
-    if (toString.call(list) === '[object Array]') {
-      return list.map(function (current, index) {
-        current.toggle = val
+  let appiontFilter = function () {
+    return this.totalCheck.filter(function (current, index) {
+      if (!current.toggle) {
         return current
-      })
-    }
+      }
+    })
   }
   export default {
     data () {
       return {
         // toggle = false = active; toggle = true = completed
-        // checkList: []
         type: 'All',
-        // aList: [{text: 'act1', toggle: false}],
-        // cList: [{text: 'com1', toggle: true}],
-        aList: [],
-        cList: [],
-        checkList: [],
-        checkAllType: 'checkall'
+        checkAllType: 'checkall',
+        activeList: [],
+        totalCheck: [],
+        isHandle: false
       }
     },
-    ready () {
-      // this.checkList = this.aList.concat(this.cList)
-    },
-    watch: {
-      aList () {
-        return this.aList.filter(function (current, index) {
-          if (!current.toggle) {
-            return current
-          } else {
-            return false
-          }
-        })
-      },
-      cList () {
-        return this.cList.filter(function (current, index) {
-          if (current.toggle) {
-            return current
-          } else {
-            return false
-          }
-        })
-      }
-    },
-    methods: {
-      overShow (index) {
-        this.checkList[Math.max(0, index)].show = true
-      },
-      outHide (index) {
-        this.checkList[Math.max(0, index)].show = false
-      },
-      clearComplete (index) {
-        console.log('clear!!')
-        this.cList = []
+    computed: {
+      checkList () {
         let list = []
-        this.checkList.forEach(function (current, index) {
-          if (!current.toggle) {
-            list.push(current)
-          }
-        })
-        this.checkAllType = 'checkall'
-        this.checkList = list
-      },
-      checkAll () {
-        // 如果为空则不切换
-        if (this.aList.length === 0 && this.cList.length === 0) return false
-        // 切换为Active
-        if (this.checkAllType === 'checkalled') {
-          this.checkAllType = 'checkall'
-          let temporay = convent(this.cList, false)
-          this.aList = this.aList.concat(temporay)
-          this.cList = []
-        } else {  // 切换为Completed
-          this.checkAllType = 'checkalled'
-          let temporay = convent(this.aList, true)
-          this.cList = this.cList.concat(temporay)
-          this.aList = []
-        }
-        if ((this.type === 'Active' && this.checkAllType === 'checkalled') || (this.type === 'Completed' && this.checkAllType === 'checkall')) {
-          this.checkList = []
-        }
-      },
-      check () {
-        console.log(this)
-      },
-      checkEnter (current) {
-        let obj = {
-          text: current.target.value,
-          toggle: false,
-          show: false
-        }
-        current.target.value = null
         switch (this.type) {
           case 'All':
-            this.aList.push(obj)
+            list = this.totalCheck
             break
           case 'Active':
-            this.aList.push(obj)
+            list = this.totalCheck.filter(function (current, index) {
+              if (!current.toggle) {
+                return current
+              }
+            })
             break
           case 'Completed':
-            this.cList.push(obj)
+            list = this.totalCheck.filter(function (current, index) {
+              if (current.toggle) {
+                return current
+              }
+            })
             break
         }
-        // this.activeList.push(this.activeList[this.activeList.length] + 1)
-        this.checkList.push(obj)
-      },
-      destroy (index) {
-        let move = this.checkList[index]
-        let isAB = move.toggle === true ? 'Completed' : 'Active'
-        let activeList = []
-        let completeList = []
-        this.checkList.splice(index - 1 === -1 ? 0 : index, 1)
-        for (var i = 0; i < index; i++) {
-          if (this.checkList[i].toggle) {
-            completeList.push(this.checkList[i])
-          } else {
-            activeList.push(this.checkList[i])
-          }
-        }
-        if (isAB === 'Active') {
-          this.aList.splice(activeList.length, 1)
-        } else {
-          this.cList.splice(completeList.length, 1)
-        }
-      },
+        return list
+      }
+    },
+    events: {
       // 切换视图
       setList (checkListObj, type) {
         this.type = type
         switch (this.type) {
           case 'All':
-            this.checkList = this.aList.concat(this.cList)
+            this.checkList = this.totalCheck
             break
           case 'Active':
-            this.checkList = this.aList
+            this.checkList = this.checkList.filter(function (current, index) {
+              if (!current.toggle) {
+                return current
+              } else {
+                return false
+              }
+            })
             break
           case 'Completed':
-            this.checkList = this.cList
+            this.checkList = this.checkList.filter(function (current, index) {
+              if (current.toggle) {
+                return current
+              } else {
+                return false
+              }
+            })
             break
         }
+        this.countActiveList()
       },
       // 点击复选框
       setToggle (index) {
-        // console.log(index)
-        let move = this.checkList[index]
-        move.toggle = !move.toggle
-        let activeComplete = part.call(this, move, index)
-        // 移动
-        if (activeComplete.isAB === 'Active') {
-          this.cList.push(move)
-          this.aList.splice(activeComplete.activeList.length, 1)
-          // console.log(this.aList)
-        } else {
-          console.log(index)
-          this.aList.push(move)
-          this.cList.splice(activeComplete.completeList.length, 1)
-          // console.log(this.cList)
+        let a = 0
+        switch (this.type) {
+          case 'All':
+            this.totalCheck[index].toggle = !this.totalCheck[index].toggle
+            break
+          case 'Active':
+            a = currentIndex.call(this, false, index)
+            this.totalCheck[a].toggle = !this.totalCheck[a].toggle
+            break
+          case 'Completed':
+            a = currentIndex.call(this, true, index)
+            this.totalCheck[a].toggle = !this.totalCheck[a].toggle
+            break
         }
-        if (this.cList.length === this.checkList.length) {
+        this.countCheckAllType()
+        this.countActiveList()
+      },
+      checkEdit (type, index) {
+        this.totalCheck[index].isEdit = type
+      },
+      destroy (index) {
+        let a = 0
+        switch (this.type) {
+          case 'All':
+            this.totalCheck.splice(index, 1)
+            break
+          case 'Active':
+            a = currentIndex.call(this, false, index)
+            this.totalCheck.splice(a, 1)
+            break
+          case 'Completed':
+            a = currentIndex.call(this, true, index)
+            this.totalCheck.splice(a, 1)
+            break
+        }
+        if (this.totalCheck.length === 0) {
+          this.isHandle = false
+        }
+        this.countActiveList()
+      }
+    },
+    methods: {
+      countActiveList () {
+        this.activeList = appiontFilter.call(this)
+      },
+      countCheckAllType () {
+        for (var t = 0; t < this.totalCheck.length; t++) {
+          if (!this.totalCheck[t].toggle) {
+            this.checkAllType = 'checkall'
+            return
+          }
+        }
+        if (t === this.totalCheck.length) {
           this.checkAllType = 'checkalled'
-        } else {
+        }
+      },
+      clearComplete (index) {
+        this.totalCheck = appiontFilter.call(this)
+        this.checkAllType = 'checkall'
+        this.countActiveList()
+      },
+      checkAll () {
+        let toggled
+        if (this.checkAllType === 'checkall') {
+          toggled = true
+          this.checkAllType = 'checkalled'
+        } else if (this.checkAllType === 'checkalled') {
+          toggled = false
           this.checkAllType = 'checkall'
         }
+        this.checkList = this.totalCheck.map(function (current, index) {
+          current.toggle = toggled
+          return current
+        })
+        this.countActiveList()
+      },
+      checkEnter (current) {
+        let val = current.target.value
+        if (val === '' || val === null) return
+        let obj = {
+          text: val,
+          toggle: false,
+          isEdit: false
+        }
+        current.target.value = null
+        this.isHandle = true
+        this.totalCheck.push(obj)
+        this.checkList = this.totalCheck
+        this.countActiveList()
       }
     },
     components: {
@@ -204,6 +202,9 @@
   }
 </script>
 <style>
+  .todosBody {
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1)
+  }
   .check:after,.check-list > li:after {
     content: "";
     display: block;
@@ -213,9 +214,12 @@
     float:left;
   }
   .check .check-all {
-    width: 51px;
+    width: 10%;
     height: 65px;
     display: block;
+  }
+  .check .check-input {
+    width: 90%;
   }
   .checkall {
     background: url(./../../assets/checkall.png);
@@ -231,7 +235,7 @@
   }
   .check-input > input {
     color: #4d4d4d;
-    width: 549px;
+    width: 100%;
     height: 65px;
     outline: none;
     border:none;
